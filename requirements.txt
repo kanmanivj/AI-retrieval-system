@@ -1,0 +1,9 @@
+langchain
+faiss-cpu
+openai
+fastapi
+uvicorn
+python-dotenv
+pypdf
+beautifulsoup4
+requests
