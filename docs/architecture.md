@@ -20,21 +20,15 @@ This separation allows each stage to be developed, tested, and scaled independen
 ## 2. High-Level System Flow
 
 User Query
-│
-▼
-Query Interface
-│
-▼
-Retriever
-│
-▼
-Vector / Hybrid Search
-│
-▼
-Ranked Results
-│
-├── Returned as sources
-└── (Optional) Passed to LLM for answer generation
+→ Query Interface
+→ Query Embedding
+→ Retriever
+→ Vector / Hybrid Search
+→ Ranking & Filtering
+→ Retrieved Chunks
+   - Returned as sources
+   - (Optional) Passed to LLM
+
 
 ---
 
