@@ -1,170 +1,146 @@
-# Design Decisions
+# Project Roadmap
 
-This document captures the key architectural and technical decisions made during the development of the AI Retrieval System.  
-Each decision is explained along with its rationale and trade-offs to ensure the system remains understandable, maintainable, and feasible for a solo developer.
+This roadmap defines a realistic, phased plan for building the AI Retrieval System.  
+It reflects an intentionally constrained scope, prioritizing a working, trustworthy retrieval system over feature breadth or speculative capabilities.
 
----
-
-## 1. Retrieval-First Architecture
-
-**Decision:**  
-The system prioritizes document retrieval over language-model-driven answer generation.
-
-**Rationale:**  
-- Language models can generate fluent but ungrounded responses.
-- Retrieval ensures answers are backed by real, inspectable sources.
-- Improves trust, debuggability, and auditability.
-
-**Trade-offs:**  
-- The system cannot answer questions outside the indexed data.
-- Requires maintaining a document corpus.
-
-This constraint is intentional and aligns with real-world retrieval systems.
+The roadmap assumes development by a single developer and focuses on delivering value early through an end-to-end, retrieval-first implementation.
 
 ---
 
-## 2. User-Controlled Knowledge Base (No Live Web Search)
+## Phase 1: Core Retrieval MVP (Non-Negotiable)
 
-**Decision:**  
-The system searches only documents that have been explicitly ingested and indexed.
+**Goal:**  
+Build a complete, end-to-end retrieval system that searches only user-ingested documents.
 
-**Rationale:**  
-- Results are deterministic and reproducible.
-- Query latency is low and predictable.
-- Avoids legal, licensing, and reliability risks of live web search.
-- Matches enterprise and research use cases.
+This phase defines the minimum system that must exist for the project to be considered successful.
 
-**Trade-offs:**  
-- Knowledge must be ingested in advance.
-- Content can become outdated without re-indexing.
+### Scope
+- Local document ingestion (PDF, TXT, Markdown)
+- Text cleaning and normalization
+- Chunk-based document processing
+- Embedding generation
+- Local vector index creation
+- Query embedding and similarity-based retrieval
+- CLI-based query interface
+- Source-backed retrieval results (no answer generation)
+- Source-aware retrieval output with basic citation metadata (document ID, source, location)
 
-Live web search is intentionally excluded from the initial design.
+### Explicit Non-Goals
+- No live web search
+- No cloud infrastructure
+- No language-model-based answer generation
+- No scalability optimizations
 
----
+### Deliverables
+- A reproducible indexing pipeline
+- A query pipeline that returns relevant document chunks
+- Clear separation between indexing and querying
+- Working retrieval on a small, curated dataset
 
-## 3. Offline Indexing and Online Querying
-
-**Decision:**  
-Indexing and querying are separated into two distinct execution modes.
-
-**Rationale:**  
-- Indexing is computationally expensive and infrequent.
-- Query-time execution remains fast and lightweight.
-- Indexes can be rebuilt without affecting users.
-
-**Trade-offs:**  
-- Requires explicit index management.
-- Document updates are not immediately reflected until re-indexing.
-
----
-
-## 4. Chunk-Based Document Representation
-
-**Decision:**  
-Documents are split into smaller chunks before indexing.
-
-**Rationale:**  
-- Improves retrieval relevance and precision.
-- Prevents large documents from dominating search results.
-- Fits embedding model context limitations.
-
-**Trade-offs:**  
-- Requires careful chunk-size tuning.
-- Some inter-chunk context may be lost.
-
-Metadata is used to preserve document-level relationships.
+### Success Criteria
+- Documents can be indexed end-to-end without manual intervention
+- Queries return relevant chunks from the indexed data
+- The system behaves deterministically and offline
+- Every retrieved chunk can be traced back to its original source
 
 ---
 
-## 5. Vector Embeddings as the Primary Retrieval Mechanism
+## Phase 2: Retrieval Quality and Robustness
 
-**Decision:**  
-Semantic vector search is used as the primary retrieval strategy.
+**Goal:**  
+Improve result quality and system reliability without increasing conceptual complexity.
 
-**Rationale:**  
-- Captures meaning beyond keyword matching.
-- Handles paraphrased and natural-language queries well.
-- Works across heterogeneous document formats.
+### Scope
+- Metadata extraction and storage
+- Metadata-based filtering
+- Improved chunking strategies
+- Basic ranking and score normalization
+- Graceful handling of empty or low-confidence results
+- Structured logging and clearer error messages
 
-**Trade-offs:**  
-- Embedding generation has an upfront computational cost.
-- Similarity thresholds and ranking require tuning.
+### Deliverables
+- More consistent and explainable retrieval behavior
+- Better observability during indexing and querying
 
-Keyword or hybrid retrieval is considered a future extension.
-
----
-
-## 6. Technology-Agnostic Models and Storage
-
-**Decision:**  
-Embedding models and vector storage are abstracted behind interfaces.
-
-**Rationale:**  
-- Avoids vendor lock-in.
-- Enables experimentation with different tools.
-- Improves long-term maintainability.
-
-**Trade-offs:**  
-- Slight increase in initial implementation complexity.
-- Requires well-defined interfaces.
-
-This abstraction is considered a long-term investment.
+### Success Criteria
+- Noticeable improvement in retrieval relevance
+- Easier debugging and tuning of retrieval behavior
 
 ---
 
-## 7. Local-First Development Approach
+## Phase 3: Optional Retrieval-Augmented Generation (RAG)
 
-**Decision:**  
-The system is developed and executed locally by default.
+**Goal:**  
+Add optional answer generation while keeping retrieval as the primary and required capability.
 
-**Rationale:**  
-- Reduces cost and operational overhead.
-- Simplifies debugging and iteration.
-- Appropriate for MVP and solo development.
+### Scope
+- Language model integration for answer synthesis
+- Strict prompt constraints using retrieved chunks only
+- Generated answers include explicit citations derived from retrieved source
+- Configuration toggle to enable or disable generationcv 
 
-**Trade-offs:**  
-- Limited scalability without additional infrastructure.
-- Manual deployment for multi-user environments.
+### Constraints
+- Retrieval must always precede generation
+- The system must remain usable without generation enabled
 
-Cloud deployment is intentionally deferred.
+### Deliverables
+- RAG pipeline layered cleanly on top of retrieval
+- Clear separation between retrieval and generation logic
 
----
-
-## 8. Optional Retrieval-Augmented Generation (RAG)
-
-**Decision:**  
-Language-model-based answer generation is optional and occurs only after retrieval.
-
-**Rationale:**  
-- Retrieval remains useful without an LLM.
-- Generated answers are grounded in retrieved documents.
-- Users can choose between raw sources and synthesized responses.
-
-**Trade-offs:**  
-- Adds latency and cost when enabled.
-- Requires strict prompting to avoid hallucinations.
+### Success Criteria
+- Generated answers are grounded in retrieved sources
+- Retrieval remains the core system capability
 
 ---
 
-## 9. Narrow Initial Scope
+## Phase 4: Developer Interfaces and Usability
 
-**Decision:**  
-The initial version focuses on a small, well-defined feature set.
+**Goal:**  
+Make the system easier to use, extend, and integrate without changing core behavior.
 
-**Rationale:**  
-- Reduces scope creep.
-- Increases likelihood of project completion.
-- Enables faster validation of core functionality.
+### Scope
+- Improved CLI ergonomics
+- Python API for programmatic use
+- Configuration via files or environment variables
+- Clear usage documentation
 
-**Trade-offs:**  
-- Advanced features are deferred.
-- Some use cases are not immediately supported.
+### Deliverables
+- Stable interfaces for indexing and querying
+- Improved developer experience
 
-This decision directly supports project feasibility.
+### Success Criteria
+- System can be used as a library or tool without code modification
+- Interfaces remain stable across iterations
 
 ---
 
-## 10. Summary
+## Explicitly Out of Scope (for This Project)
 
-The design decisions above prioritize **clarity, determinism, and feasibility** over maximum feature coverage.  
-Each choice reflects an intentional trade-off to ensure the AI Retrieval System remains practical to build, easy to reason about, and aligned with real-world retrieval system patterns.
+The following items are intentionally excluded to preserve feasibility and focus:
+
+- Live internet search at query time
+- Autonomous or self-updating knowledge bases
+- Multi-user or multi-tenant systems
+- Distributed or cloud-native deployment
+- Internet-scale indexing
+- Model training or fine-tuning
+- General-purpose chatbot behavior
+
+These may be explored separately but are not goals of this project.
+
+---
+
+## Guiding Principles
+
+- Always maintain a working end-to-end system
+- Prefer correctness and determinism over feature count
+- Keep retrieval independent from generation
+- Defer complexity until it is clearly justified
+- Treat documentation as part of the system
+
+---
+
+## Summary
+
+This roadmap reflects a deliberate commitment to **feasibility, clarity, and correctness**.  
+By focusing on a retrieval-first, user-controlled knowledge base and layering additional capabilities only when justified, the AI Retrieval System remains achievable for a solo developer while aligning with real-world retrieval system practices.
